@@ -96,21 +96,6 @@ func (img Bitmap) Byte(x, y int) uint8 {
 	return img.Pix[y*img.Stride+x/8]
 }
 
-// At satisfies the [image.Image] interface.
-func (img Bitmap) At(x, y int) color.Color {
-	w, h := img.WidthScale, img.HeightScale
-	if w == 0 {
-		w = max(1, DefaultWidthScale)
-	}
-	if h == 0 {
-		h = max(1, DefaultHeightScale)
-	}
-	if img.Get(x/int(w), y/int(h)) {
-		return img.Opaque
-	}
-	return img.Transparent
-}
-
 // ColorModel satisfies the [image.Image] interface.
 func (img Bitmap) ColorModel() color.Model {
 	return color.Alpha16Model
@@ -118,6 +103,20 @@ func (img Bitmap) ColorModel() color.Model {
 
 // Bounds satisfies the [image.Image] interface.
 func (img Bitmap) Bounds() image.Rectangle {
+	w, h := img.scale()
+	return image.Rect(0, 0, w*img.Rect.Dx(), h*img.Rect.Dy())
+}
+
+// At satisfies the [image.Image] interface.
+func (img Bitmap) At(x, y int) color.Color {
+	if w, h := img.scale(); img.Get(x/w, y/h) {
+		return img.Opaque
+	}
+	return img.Transparent
+}
+
+// scale returns the width and height scale.
+func (img Bitmap) scale() (int, int) {
 	w, h := img.WidthScale, img.HeightScale
 	if w == 0 {
 		w = max(1, DefaultWidthScale)
@@ -125,7 +124,7 @@ func (img Bitmap) Bounds() image.Rectangle {
 	if h == 0 {
 		h = max(1, DefaultHeightScale)
 	}
-	return image.Rect(0, 0, int(w)*img.Rect.Dx(), int(h)*img.Rect.Dy())
+	return int(w), int(h)
 }
 
 // Encode encodes the bitmap to the writer using the block type.
