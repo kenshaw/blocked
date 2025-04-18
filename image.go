@@ -9,11 +9,20 @@ import (
 	"io"
 )
 
+var (
+	// DefaultWidthScale is the default pixel width scale when bitmaps used as [image.Image].
+	DefaultWidthScale uint = 24
+	// DefaultHeightScale is the default pixel height scale when bitmaps used as [image.Image].
+	DefaultHeightScale uint = 24
+)
+
 // Bitmap is a monotone bitmap image.
 type Bitmap struct {
 	Pix         []uint8
 	Stride      int
 	Rect        image.Rectangle
+	WidthScale  uint
+	HeightScale uint
 	Opaque      color.Alpha16
 	Transparent color.Alpha16
 }
@@ -30,12 +39,14 @@ func NewBitmap(rect image.Rectangle) Bitmap {
 		Pix:         make([]uint8, stride*rect.Dy()),
 		Stride:      stride,
 		Rect:        rect,
+		WidthScale:  DefaultWidthScale,
+		HeightScale: DefaultHeightScale,
 		Opaque:      color.Opaque,
 		Transparent: color.Transparent,
 	}
 }
 
-// NewBitmapFromReader creates a new bitmap from the reader.
+// NewBitmapFromReader creates a new bitmap from the reader. Reads x pixel per line.
 //
 // TODO: allow compact byte streams.
 func NewBitmapFromReader(r io.Reader, x int) (Bitmap, error) {
@@ -58,9 +69,11 @@ loop:
 		pix = append(pix, buf...)
 	}
 	return Bitmap{
-		Pix:    pix,
-		Stride: stride,
-		Rect:   image.Rect(0, 0, x, len(pix)/stride),
+		Pix:         pix,
+		Stride:      stride,
+		WidthScale:  DefaultWidthScale,
+		HeightScale: DefaultHeightScale,
+		Rect:        image.Rect(0, 0, x, len(pix)/stride),
 	}, nil
 }
 
@@ -80,7 +93,10 @@ func (img Bitmap) Get(x, y int) bool {
 
 // At satisfies the [image.Image] interface.
 func (img Bitmap) At(x, y int) color.Color {
-	if img.Get(x, y) {
+	if img.Get(
+		x/max(int(DefaultWidthScale), int(img.WidthScale)),
+		y/max(int(DefaultHeightScale), int(img.HeightScale)),
+	) {
 		return img.Opaque
 	}
 	return img.Transparent
@@ -93,10 +109,14 @@ func (img Bitmap) ColorModel() color.Model {
 
 // Bounds satisfies the [image.Image] interface.
 func (img Bitmap) Bounds() image.Rectangle {
-	return img.Rect
+	return image.Rect(
+		0, 0,
+		img.Rect.Dx()*max(int(DefaultWidthScale), int(img.WidthScale)),
+		img.Rect.Dy()*max(int(DefaultHeightScale), int(img.HeightScale)),
+	)
 }
 
-// Encode encodes the bitmap to the writer using the passed type.
+// Encode encodes the bitmap to the writer using the block type.
 func (img Bitmap) Encode(w io.Writer, typ Type) error {
 	h := img.Rect.Dy()
 	if typ == Auto {
@@ -212,8 +232,7 @@ func enc2x4(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) error {
 	}
 	for y := 0; y < h; y += 4 {
 		for x := 0; x < w; x += 2 {
-			b := 0 |
-				buf[(y+0)*n+x/8]&(0b11<<(x%8))>>(x%8)<<0 |
+			b := buf[(y)*n+x/8]&(0b11<<(x%8))>>(x%8) |
 				buf[(y+1)*n+x/8]&(0b11<<(x%8))>>(x%8)<<2 |
 				buf[(y+2)*n+x/8]&(0b11<<(x%8))>>(x%8)<<4 |
 				buf[(y+3)*n+x/8]&(0b11<<(x%8))>>(x%8)<<6

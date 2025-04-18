@@ -40,9 +40,8 @@ func TestBitmapGetSet(t *testing.T) {
 					Rect:   image.Rect(0, 0, w, h),
 				}
 				// t.Logf("pix: %b", img1.Pix)
-				b1 := img1.Bounds()
-				for y := range b1.Dy() {
-					for x := range b1.Dx() {
+				for y := range img1.Rect.Dy() {
+					for x := range img1.Rect.Dx() {
 						v := img1.Get(x, y)
 						if x%2 != 1 && v {
 							t.Errorf("expected false at (%d,%d)", x, y)
@@ -54,9 +53,8 @@ func TestBitmapGetSet(t *testing.T) {
 				}
 				// create
 				img2 := NewBitmap(image.Rect(0, 0, w, h))
-				b2 := img2.Bounds()
-				for y := range b2.Dy() {
-					for x := range b2.Dx() {
+				for y := range img2.Rect.Dy() {
+					for x := range img2.Rect.Dx() {
 						img2.Set(x, y, x%2 == 1)
 					}
 				}
@@ -84,7 +82,7 @@ func TestNewBitmap(t *testing.T) {
 		t.Run(strconv.Itoa(n), func(t *testing.T) {
 			r := rand.New(rand.NewSource(int64(n)))
 			img := NewBitmap(image.Rect(0, 0, 1+r.Intn(28), 1+r.Intn(28)))
-			rect := img.Bounds()
+			rect := img.Rect
 			w, h, expTr, expFa := rect.Dx(), rect.Dy(), 0, 0
 			for y := range h {
 				for x := range w {
