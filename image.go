@@ -10,10 +10,10 @@ import (
 )
 
 var (
-	// DefaultWidthScale is the default pixel width scale when bitmaps used as [image.Image].
-	DefaultWidthScale uint = 24
-	// DefaultHeightScale is the default pixel height scale when bitmaps used as [image.Image].
-	DefaultHeightScale uint = 24
+	// DefaultScaleWidth is the default pixel width scale when bitmaps used as [image.Image].
+	DefaultScaleWidth uint = 24
+	// DefaultScaleHeight is the default pixel height scale when bitmaps used as [image.Image].
+	DefaultScaleHeight uint = 24
 )
 
 // Bitmap is a monotone bitmap image.
@@ -21,8 +21,8 @@ type Bitmap struct {
 	Pix         []uint8
 	Stride      int
 	Rect        image.Rectangle
-	WidthScale  uint
-	HeightScale uint
+	ScaleWidth  uint
+	ScaleHeight uint
 	Opaque      color.Alpha16
 	Transparent color.Alpha16
 }
@@ -39,8 +39,8 @@ func NewBitmap(rect image.Rectangle) Bitmap {
 		Pix:         make([]uint8, stride*rect.Dy()),
 		Stride:      stride,
 		Rect:        rect,
-		WidthScale:  DefaultWidthScale,
-		HeightScale: DefaultHeightScale,
+		ScaleWidth:  DefaultScaleWidth,
+		ScaleHeight: DefaultScaleHeight,
 		Opaque:      color.Opaque,
 		Transparent: color.Transparent,
 	}
@@ -71,8 +71,8 @@ loop:
 	return Bitmap{
 		Pix:         pix,
 		Stride:      stride,
-		WidthScale:  DefaultWidthScale,
-		HeightScale: DefaultHeightScale,
+		ScaleWidth:  DefaultScaleWidth,
+		ScaleHeight: DefaultScaleHeight,
 		Rect:        image.Rect(0, 0, x, len(pix)/stride),
 	}, nil
 }
@@ -117,12 +117,12 @@ func (img Bitmap) At(x, y int) color.Color {
 
 // scale returns the width and height scale.
 func (img Bitmap) scale() (int, int) {
-	w, h := img.WidthScale, img.HeightScale
+	w, h := img.ScaleWidth, img.ScaleHeight
 	if w == 0 {
-		w = max(1, DefaultWidthScale)
+		w = max(1, DefaultScaleWidth)
 	}
 	if h == 0 {
-		h = max(1, DefaultHeightScale)
+		h = max(1, DefaultScaleHeight)
 	}
 	return int(w), int(h)
 }
