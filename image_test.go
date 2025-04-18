@@ -143,12 +143,12 @@ func TestNewBitmap(t *testing.T) {
 					var buf bytes.Buffer
 					t.Logf("%s:", typ)
 					n := img.Width(typ)
-					t.Logf("%s", strings.Repeat("_", n))
+					buf.WriteString(strings.Repeat("_", n) + "\n")
 					if err := img.Encode(&buf, typ); err != nil {
 						t.Fatalf("expected no error, got: %v", err)
 					}
+					buf.WriteString("\n" + strings.Repeat("~", n))
 					testWrite(t, buf.Bytes())
-					t.Logf("%s", strings.Repeat("~", n))
 				})
 			}
 		})
