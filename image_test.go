@@ -7,17 +7,18 @@ import (
 	"image/png"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
 	"testing"
 )
 
-func TestBitmapGetSet(t *testing.T) {
+func TestBitmapSetGet(t *testing.T) {
 	const mask = 0b10101010
 	for _, h := range []int{2, 4, 6, 8, 10, 12, 16, 24, 28, 34, 56} {
 		for _, w := range []int{2, 4, 6, 8, 10, 12, 16, 24, 28, 34, 56} {
-			t.Run(strconv.Itoa(h)+"/"+strconv.Itoa(w), func(t *testing.T) {
+			t.Run(fmt.Sprintf("%02d_%02d", w, h), func(t *testing.T) {
 				n := w
 				if n%8 != 0 {
 					n = n/8 + 1
@@ -100,7 +101,7 @@ func TestNewBitmap(t *testing.T) {
 			}
 			t.Logf("w: %d h: %d -- %d/%d", w, h, expTr, expFa)
 			if expTr == 0 || expFa == 0 {
-				t.Fatal("invalid test")
+				t.Fatal("invalid test -- no significant bits")
 			}
 			if n, exp := expTr+expFa, rect.Dx()*rect.Dy(); n != exp {
 				t.Fatalf("expected %d, got: %d", exp, n)
@@ -121,12 +122,22 @@ func TestNewBitmap(t *testing.T) {
 			if fa != expFa {
 				t.Errorf("expected %d falses, got: %d", expFa, fa)
 			}
+			// export as png
 			var buf bytes.Buffer
 			if err := png.Encode(&buf, img); err != nil {
 				t.Fatalf("expected no error, got: %v", err)
 			}
-			if err := os.WriteFile(fmt.Sprintf("test_%4d.png", n), buf.Bytes(), 0o644); err != nil {
+			name := filepath.Join("testdata", fmt.Sprintf("test_%4d.png", n))
+			if err := os.WriteFile(name, buf.Bytes(), 0o644); err != nil {
 				t.Fatalf("expected no error, got: %v", err)
+			}
+			// compare golden
+			expBuf, err := os.ReadFile(name + ".golden")
+			if err != nil {
+				t.Fatalf("expected no error, got: %v", err)
+			}
+			if !bytes.Equal(buf.Bytes(), expBuf) {
+				t.Errorf("expected %s and %s to be the same", name+".golden", name)
 			}
 			for _, typ := range Types() {
 				t.Run(typ.String(), func(t *testing.T) {
