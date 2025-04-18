@@ -78,9 +78,9 @@ func TestBitmapSetGet(t *testing.T) {
 }
 
 func TestNewBitmap(t *testing.T) {
-	for n := 1330; n <= 1343; n++ {
-		t.Run(strconv.Itoa(n), func(t *testing.T) {
-			r := rand.New(rand.NewSource(int64(n)))
+	for seed := 1330; seed <= 1343; seed++ {
+		t.Run(strconv.Itoa(seed), func(t *testing.T) {
+			r := rand.New(rand.NewSource(int64(seed)))
 			img := NewBitmap(image.Rect(0, 0, 1+r.Intn(28), 1+r.Intn(28)))
 			rect := img.Rect
 			w, h, expTr, expFa := rect.Dx(), rect.Dy(), 0, 0
@@ -126,7 +126,7 @@ func TestNewBitmap(t *testing.T) {
 			if err := png.Encode(&buf, img); err != nil {
 				t.Fatalf("expected no error, got: %v", err)
 			}
-			name := filepath.Join("testdata", fmt.Sprintf("test_%4d.png", n))
+			name := filepath.Join("testdata", fmt.Sprintf("test_%4d.png", seed))
 			if err := os.WriteFile(name, buf.Bytes(), 0o644); err != nil {
 				t.Fatalf("expected no error, got: %v", err)
 			}
@@ -142,13 +142,24 @@ func TestNewBitmap(t *testing.T) {
 				t.Run(typ.String(), func(t *testing.T) {
 					var buf bytes.Buffer
 					t.Logf("%s:", typ)
-					n := img.Width(typ)
-					buf.WriteString(strings.Repeat("_", n) + "\n")
+					w := img.Width(typ)
+					buf.WriteString(strings.Repeat("_", w) + "\n")
 					if err := img.Encode(&buf, typ); err != nil {
 						t.Fatalf("expected no error, got: %v", err)
 					}
-					buf.WriteString("\n" + strings.Repeat("~", n))
+					buf.WriteString("\n" + strings.Repeat("~", w))
 					testWrite(t, buf.Bytes())
+					name := filepath.Join("testdata", fmt.Sprintf("blocks_%4d_%s.txt", seed, typ))
+					if err := os.WriteFile(name, append(buf.Bytes(), '\n'), 0o644); err != nil {
+						t.Fatalf("expected no error, got: %v", err)
+					}
+					expBuf, err := os.ReadFile(name + ".golden")
+					if err != nil {
+						t.Fatalf("expected no error, got: %v", err)
+					}
+					if !bytes.Equal(bytes.TrimSpace(buf.Bytes()), bytes.TrimSpace(expBuf)) {
+						t.Errorf("expected %s and %s to be the same", name+".golden", name)
+					}
 				})
 			}
 		})
