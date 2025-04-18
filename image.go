@@ -46,7 +46,7 @@ func NewBitmap(rect image.Rectangle) Bitmap {
 	}
 }
 
-// NewBitmapFromReader creates a new bitmap from the reader. Reads x pixel per line.
+// NewBitmapFromReader creates a new bitmap from the reader. Reads x pixels per line.
 //
 // TODO: allow compact byte streams.
 func NewBitmapFromReader(r io.Reader, x int) (Bitmap, error) {
@@ -98,10 +98,14 @@ func (img Bitmap) Byte(x, y int) uint8 {
 
 // At satisfies the [image.Image] interface.
 func (img Bitmap) At(x, y int) color.Color {
-	if img.Get(
-		x/max(1, int(DefaultWidthScale), int(img.WidthScale)),
-		y/max(1, int(DefaultHeightScale), int(img.HeightScale)),
-	) {
+	w, h := img.WidthScale, img.HeightScale
+	if w == 0 {
+		w = max(1, DefaultWidthScale)
+	}
+	if h == 0 {
+		h = max(1, DefaultHeightScale)
+	}
+	if img.Get(x/int(w), y/int(h)) {
 		return img.Opaque
 	}
 	return img.Transparent
@@ -114,11 +118,14 @@ func (img Bitmap) ColorModel() color.Model {
 
 // Bounds satisfies the [image.Image] interface.
 func (img Bitmap) Bounds() image.Rectangle {
-	return image.Rect(
-		0, 0,
-		img.Rect.Dx()*max(1, int(DefaultWidthScale), int(img.WidthScale)),
-		img.Rect.Dy()*max(1, int(DefaultHeightScale), int(img.HeightScale)),
-	)
+	w, h := img.WidthScale, img.HeightScale
+	if w == 0 {
+		w = max(1, DefaultWidthScale)
+	}
+	if h == 0 {
+		h = max(1, DefaultHeightScale)
+	}
+	return image.Rect(0, 0, img.Rect.Dx()*int(w), img.Rect.Dy()*int(h))
 }
 
 // Encode encodes the bitmap to the writer using the block type.
