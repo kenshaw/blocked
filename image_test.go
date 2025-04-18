@@ -40,7 +40,6 @@ func TestBitmapSetGet(t *testing.T) {
 					Stride: n,
 					Rect:   image.Rect(0, 0, w, h),
 				}
-				// t.Logf("pix: %b", img1.Pix)
 				for y := range img1.Rect.Dy() {
 					for x := range img1.Rect.Dx() {
 						v := img1.Get(x, y)

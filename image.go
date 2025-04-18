@@ -91,11 +91,16 @@ func (img Bitmap) Get(x, y int) bool {
 	return img.Pix[y*img.Stride+x/8]&(1<<(x%8)) != 0
 }
 
+// Byte returns the byte containing x, y.
+func (img Bitmap) Byte(x, y int) uint8 {
+	return img.Pix[y*img.Stride+x/8]
+}
+
 // At satisfies the [image.Image] interface.
 func (img Bitmap) At(x, y int) color.Color {
 	if img.Get(
-		x/max(int(DefaultWidthScale), int(img.WidthScale)),
-		y/max(int(DefaultHeightScale), int(img.HeightScale)),
+		x/max(1, int(DefaultWidthScale), int(img.WidthScale)),
+		y/max(1, int(DefaultHeightScale), int(img.HeightScale)),
 	) {
 		return img.Opaque
 	}
@@ -111,8 +116,8 @@ func (img Bitmap) ColorModel() color.Model {
 func (img Bitmap) Bounds() image.Rectangle {
 	return image.Rect(
 		0, 0,
-		img.Rect.Dx()*max(int(DefaultWidthScale), int(img.WidthScale)),
-		img.Rect.Dy()*max(int(DefaultHeightScale), int(img.HeightScale)),
+		img.Rect.Dx()*max(1, int(DefaultWidthScale), int(img.WidthScale)),
+		img.Rect.Dy()*max(1, int(DefaultHeightScale), int(img.HeightScale)),
 	)
 }
 
