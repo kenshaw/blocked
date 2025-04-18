@@ -78,8 +78,8 @@ loop:
 }
 
 // Set sets the bit at x, y.
-func (img Bitmap) Set(x, y int, v bool) {
-	if v {
+func (img Bitmap) Set(x, y int, b bool) {
+	if b {
 		img.Pix[y*img.Stride+x/8] |= 1 << (x % 8)
 	} else {
 		img.Pix[y*img.Stride+x/8] &= ^(1 << (x % 8))
@@ -115,41 +115,6 @@ func (img Bitmap) At(x, y int) color.Color {
 	return img.Transparent
 }
 
-// scale returns the width and height scale.
-func (img Bitmap) scale() (int, int) {
-	w, h := img.ScaleWidth, img.ScaleHeight
-	if w == 0 {
-		w = max(1, DefaultScaleWidth)
-	}
-	if h == 0 {
-		h = max(1, DefaultScaleHeight)
-	}
-	return int(w), int(h)
-}
-
-// Encode encodes the bitmap to the writer using the block type.
-func (img Bitmap) Encode(w io.Writer, typ Type) error {
-	h := img.Rect.Dy()
-	if typ == Auto {
-		typ = Best(h)
-	}
-	var f func(io.Writer, []byte, int, int, int, map[uint8]rune) error
-	// TODO: unify the func's below
-	switch w, h := typ.Width(), typ.Height(); {
-	case w == 1 && h == 1:
-		f = enc1x1
-	case w == 1 && h == 2:
-		f = enc1x2
-	case h == 2:
-		f = enc2x2
-	case h == 3:
-		f = enc2x3
-	case h == 4:
-		f = enc2x4
-	}
-	return f(w, img.Pix, img.Rect.Dx(), h, img.Stride, typ.runeMap())
-}
-
 // Width returns the width for the block type.
 func (img Bitmap) Width(typ Type) int {
 	x, w := img.Rect.Dx(), typ.Width()
@@ -166,6 +131,40 @@ func (img Bitmap) Height(typ Type) int {
 		return y/h + 1
 	}
 	return y / h
+}
+
+// Encode encodes the bitmap to the writer using the block type.
+func (img Bitmap) Encode(w io.Writer, typ Type) error {
+	h := img.Rect.Dy()
+	if typ == Auto {
+		typ = Best(h)
+	}
+	var f func(io.Writer, []byte, int, int, int, map[uint8]rune) error
+	switch w, h := typ.Width(), typ.Height(); {
+	case w == 1 && h == 1:
+		f = enc1x1
+	case w == 1 && h == 2:
+		f = enc1x2
+	case h == 2:
+		f = enc2x2
+	case h == 3:
+		f = enc2x3
+	case h == 4:
+		f = enc2x4
+	}
+	return f(w, img.Pix, img.Rect.Dx(), h, img.Stride, typ.runeMap())
+}
+
+// scale returns the width and height scale.
+func (img Bitmap) scale() (int, int) {
+	w, h := img.ScaleWidth, img.ScaleHeight
+	if w == 0 {
+		w = max(1, DefaultScaleWidth)
+	}
+	if h == 0 {
+		h = max(1, DefaultScaleHeight)
+	}
+	return int(w), int(h)
 }
 
 // enc1x1 encodes 1x1 blocks to the writer.
