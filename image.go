@@ -125,7 +125,7 @@ func (img Bitmap) Bounds() image.Rectangle {
 	if h == 0 {
 		h = max(1, DefaultHeightScale)
 	}
-	return image.Rect(0, 0, img.Rect.Dx()*int(w), img.Rect.Dy()*int(h))
+	return image.Rect(0, 0, int(w)*img.Rect.Dx(), int(h)*img.Rect.Dy())
 }
 
 // Encode encodes the bitmap to the writer using the block type.
