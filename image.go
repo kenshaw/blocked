@@ -3,10 +3,10 @@ package blocked
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"image"
 	"image/color"
 	"io"
+	"unicode/utf8"
 )
 
 var (
@@ -163,89 +163,123 @@ func (img Bitmap) Height(typ Type) int {
 }
 
 // enc1x1 encodes 1x1 blocks to the writer.
-func enc1x1(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) error {
+func enc1x1(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) (err error) {
+	m, b, v := 0, uint8(0), make([]byte, 4)
 	for y := range h {
 		for x := range w {
-			fmt.Fprintf(wr, "%c", syms[buf[y*n+x/8]&(1<<(x%8))>>(x%8)])
+			m = x % 8
+			b = buf[y*n+x/8] & (1 << m) >> m
+			if _, err = wr.Write(v[:utf8.EncodeRune(v, syms[b])]); err != nil {
+				return err
+			}
 		}
-		if y != h-1 {
-			fmt.Fprintln(wr)
+		if y < h-1 {
+			if _, err = wr.Write(nl); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
 }
 
 // enc1x2 encodes 1x2 blocks to the writer.
-func enc1x2(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) error {
+func enc1x2(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) (err error) {
 	if h%2 != 0 {
 		buf = append(buf, make([]byte, n)...)
 	}
+	d, m, b, v := 0, 0, uint8(0), make([]byte, 4)
 	for y := 0; y < h; y += 2 {
 		for x := range w {
-			b := buf[y*n+x/8]&(1<<(x%8))>>(x%8) |
-				buf[(y+1)*n+x/8]&(1<<(x%8))>>(x%8)<<1
-			fmt.Fprintf(wr, "%c", syms[b])
+			d, m = x/8, x%8
+			b = buf[y*n+d]&(1<<m)>>m |
+				buf[(y+1)*n+d]&(1<<m)>>m<<1
+			if _, err = wr.Write(v[:utf8.EncodeRune(v, syms[b])]); err != nil {
+				return err
+			}
 		}
 		if y < h-2 {
-			fmt.Fprintln(wr)
+			if _, err = wr.Write(nl); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
 }
 
 // enc2x2 encodes 2x2 blocks to the writer.
-func enc2x2(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) error {
+func enc2x2(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) (err error) {
 	if h%2 != 0 {
 		buf = append(buf, make([]byte, n)...)
 	}
+	d, m, b, v := 0, 0, uint8(0), make([]byte, 4)
 	for y := 0; y < h; y += 2 {
 		for x := 0; x < w; x += 2 {
-			b := buf[y*n+x/8]&(0b11<<(x%8))>>(x%8) |
-				buf[(y+1)*n+x/8]&(0b11<<(x%8))>>(x%8)<<2
-			fmt.Fprintf(wr, "%c", syms[b])
+			d, m = x/8, x%8
+			b = buf[y*n+d]&(0b11<<m)>>m |
+				buf[(y+1)*n+d]&(0b11<<m)>>m<<2
+			if _, err = wr.Write(v[:utf8.EncodeRune(v, syms[b])]); err != nil {
+				return err
+			}
 		}
 		if y < h-2 {
-			fmt.Fprintln(wr)
+			if _, err = wr.Write(nl); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
 }
 
 // enc2x3 encodes 2x3 blocks to the writer.
-func enc2x3(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) error {
+func enc2x3(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) (err error) {
 	if x := h % 3; x != 0 {
 		buf = append(buf, make([]byte, n*(3-x))...)
 	}
+	d, m, b, v := 0, 0, uint8(0), make([]byte, 4)
 	for y := 0; y < h; y += 3 {
 		for x := 0; x < w; x += 2 {
-			b := buf[y*n+x/8]&(0b11<<(x%8))>>(x%8) |
-				buf[(y+1)*n+x/8]&(0b11<<(x%8))>>(x%8)<<2 |
-				buf[(y+2)*n+x/8]&(0b11<<(x%8))>>(x%8)<<4
-			fmt.Fprintf(wr, "%c", syms[b])
+			d, m = x/8, x%8
+			b = buf[y*n+d]&(0b11<<m)>>m |
+				buf[(y+1)*n+d]&(0b11<<m)>>m<<2 |
+				buf[(y+2)*n+d]&(0b11<<m)>>m<<4
+			if _, err = wr.Write(v[:utf8.EncodeRune(v, syms[b])]); err != nil {
+				return err
+			}
 		}
 		if y < h-3 {
-			fmt.Fprintln(wr)
+			if _, err = wr.Write(nl); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
 }
 
 // enc2x4 encodes 2x4 blocks to the writer.
-func enc2x4(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) error {
+func enc2x4(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) (err error) {
 	if x := h % 4; x != 0 {
 		buf = append(buf, make([]byte, n*(4-x))...)
 	}
+	d, m, b, v := 0, 0, uint8(0), make([]byte, 4)
 	for y := 0; y < h; y += 4 {
 		for x := 0; x < w; x += 2 {
-			b := buf[(y)*n+x/8]&(0b11<<(x%8))>>(x%8) |
-				buf[(y+1)*n+x/8]&(0b11<<(x%8))>>(x%8)<<2 |
-				buf[(y+2)*n+x/8]&(0b11<<(x%8))>>(x%8)<<4 |
-				buf[(y+3)*n+x/8]&(0b11<<(x%8))>>(x%8)<<6
-			fmt.Fprintf(wr, "%c", syms[b])
+			d, m = x/8, x%8
+			b = buf[(y)*n+d]&(0b11<<m)>>m |
+				buf[(y+1)*n+d]&(0b11<<m)>>m<<2 |
+				buf[(y+2)*n+d]&(0b11<<m)>>m<<4 |
+				buf[(y+3)*n+d]&(0b11<<m)>>m<<6
+			if _, err = wr.Write(v[:utf8.EncodeRune(v, syms[b])]); err != nil {
+				return err
+			}
 		}
 		if y < h-4 {
-			fmt.Fprintln(wr)
+			if _, err = wr.Write(nl); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
 }
+
+// nl is the newline.
+var nl = []byte{'\n'}
