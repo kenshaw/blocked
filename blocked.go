@@ -15,6 +15,7 @@ const (
 	Solids            Type = 'l'
 	Binaries          Type = 'b'
 	XXs               Type = 'x'
+	Doubles           Type = 'D'
 	Halves            Type = 'v'
 	ASCIIs            Type = 'V'
 	Quads             Type = 'q'
@@ -31,6 +32,7 @@ func Types() []Type {
 		Solids,
 		Binaries,
 		XXs,
+		Doubles,
 		Halves,
 		ASCIIs,
 		Quads,
@@ -51,6 +53,8 @@ func (typ Type) String() string {
 		return "Binaries"
 	case XXs:
 		return "XXs"
+	case Doubles:
+		return "Doubles"
 	case Halves:
 		return "Halves"
 	case ASCIIs:
@@ -74,7 +78,7 @@ func (typ Type) String() string {
 // Contiguous returns true when the type is a contiguous block type.
 func (typ Type) Contiguous() bool {
 	switch typ {
-	case Solids, Halves, Quads, Sextants, Octants:
+	case Solids, Doubles, Halves, Quads, Sextants, Octants:
 		return true
 	}
 	return false
@@ -88,7 +92,7 @@ func (typ Type) Rune() rune {
 // RuneCount returns the number of runes for the block type.
 func (typ Type) RuneCount() int {
 	switch typ {
-	case Solids, Binaries, XXs:
+	case Solids, Binaries, XXs, Doubles:
 		return 2
 	case Halves, ASCIIs:
 		return 4
@@ -105,7 +109,7 @@ func (typ Type) RuneCount() int {
 // Width returns the width for the block type.
 func (typ Type) Width() int {
 	switch typ {
-	case Solids, Binaries, XXs, Halves, ASCIIs:
+	case Solids, Binaries, XXs, Doubles, Halves, ASCIIs:
 		return 1
 	case Quads, QuadsSeparated, Sextants, SextantsSeparated, Octants, Braille:
 		return 2
@@ -116,7 +120,7 @@ func (typ Type) Width() int {
 // Height returns the height for the block type.
 func (typ Type) Height() int {
 	switch typ {
-	case Solids, Binaries, XXs:
+	case Solids, Binaries, XXs, Doubles:
 		return 1
 	case Halves, ASCIIs, Quads, QuadsSeparated:
 		return 2
@@ -150,6 +154,8 @@ func (typ Type) Runes() []rune {
 		return BinariesRunes()
 	case XXs:
 		return XXsRunes()
+	case Doubles:
+		return SolidsRunes()
 	case Halves:
 		return HalvesRunes()
 	case ASCIIs:
@@ -199,6 +205,8 @@ func (typ Type) runeMap() map[uint8]rune {
 		return binaries
 	case XXs:
 		return xxs
+	case Doubles:
+		return solids
 	case Halves:
 		return halves
 	case ASCIIs:

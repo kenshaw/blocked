@@ -23,28 +23,31 @@ Enables displaying binary bit data using Unicode blocks such as [sextants][],
 
 The following [block types][b-type] are currently supported:
 
-|                               | Description                                |            Def            |
-| :---------------------------- | :----------------------------------------- | :-----------------------: |
+|                               | Description                                | Def                       |
+|:------------------------------|:-------------------------------------------|:-------------------------:|
 | **Singles (1x1 blocks)**      |                                            |                           |
-| [`Solids`][b-type]            | [Full block][solids] (` `, `█`)            |       [≝][b-solids]       |
-| [`Binaries`][b-type]          | Binary digits (`0`, `1`)                   |      [≝][b-binaries]      |
-| [`XXs`][b-type]               | Binary mask characters (` `, `X`)          |        [≝][b-xxs]         |
+| [`Solids`][b-type]            | [Full block][solids] (` `, `█`)            | [≝][b-solids]             |
+| [`Binaries`][b-type]          | Binary digits (`0`, `1`)                   | [≝][b-binaries]           |
+| [`XXs`][b-type]               | Binary mask characters (` `, `X`)          | [≝][b-xxs]                |
 |                               |                                            |                           |
-| **Doubles (1x2 blocks)**      |                                            |                           |
-| [`Halves`][b-type]            | [Half blocks][halves]                      |       [≝][b-halves]       |
-| [`ASCIIs`][b-type]            | ASCII-safe characters (` `, `^`, `v`, `%`) |       [≝][b-asciis]       |
+| **Doubles (0.5x1 blocks)**    |                                            |                           |
+| [`Doubles`][b-type]           | [Doubled full block][solids] (` `, `█`)    | [≝][b-solids]             |
+|                               |                                            |                           |
+| **Splits (1x2 blocks)**       |                                            |                           |
+| [`Halves`][b-type]            | [Half blocks][halves]                      | [≝][b-halves]             |
+| [`ASCIIs`][b-type]            | ASCII-safe characters (` `, `^`, `v`, `%`) | [≝][b-asciis]             |
 |                               |                                            |                           |
 | **Quads (2x2 blocks)**        |                                            |                           |
-| [`Quads`][b-type]             | [Quarter blocks][quads]                    |       [≝][b-quads]        |
-| [`QuadsSeparated`][b-type]    | [Quarter blocks, separated][quads-sep]     |  [≝][b-quads-separated]   |
+| [`Quads`][b-type]             | [Quarter blocks][quads]                    | [≝][b-quads]              |
+| [`QuadsSeparated`][b-type]    | [Quarter blocks, separated][quads-sep]     | [≝][b-quads-separated]    |
 |                               |                                            |                           |
 | **Sextants (2x3 blocks)**     |                                            |                           |
-| [`Sextants`][b-type]          | [Sextant blocks][sextants]                 |      [≝][b-sextants]      |
+| [`Sextants`][b-type]          | [Sextant blocks][sextants]                 | [≝][b-sextants]           |
 | [`SextantsSeparated`][b-type] | [Sextant blocks, separated][sextants-sep]  | [≝][b-sextants-separated] |
 |                               |                                            |                           |
 | **Octants (2x4 blocks)**      |                                            |                           |
-| [`Octants`][b-type]           | [Octant blocks (Unicode-16)][octants]      |      [≝][b-octants]       |
-| [`Braille`][b-type]           | [Braille glyphs][braille]                  |      [≝][b-braille]       |
+| [`Octants`][b-type]           | [Octant blocks (Unicode-16)][octants]      | [≝][b-octants]            |
+| [`Braille`][b-type]           | [Braille glyphs][braille]                  | [≝][b-braille]            |
 
 [solids]: https://www.amp-what.com/unicode/search/full%20block
 [halves]: https://www.amp-what.com/unicode/search/half%20block
