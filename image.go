@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"image"
 	"image/color"
 	"io"
@@ -157,6 +158,26 @@ func (img Bitmap) Height(typ Type) int {
 		return y/h + 1
 	}
 	return y / h
+}
+
+// Format satisfies the [fmt.Formatter] interface.
+func (img Bitmap) Format(f fmt.State, verb rune) {
+	switch typ := Type(verb); typ {
+	case Auto, 's':
+		typ = Best(img.Rect.Dy())
+		fallthrough
+	case Solids, Binaries, XXs,
+		Doubles,
+		Halves, ASCIIs,
+		Quads, QuadsSeparated,
+		Sextants, SextantsSeparated,
+		Octants, Braille:
+		if err := img.Encode(f, typ); err != nil {
+			fmt.Fprintf(f, "%%!(ERROR: %v)", err)
+		}
+	default:
+		fmt.Fprintf(f, "%%!%c(BAD VERB)", verb)
+	}
 }
 
 // Encode encodes the bitmap to the writer using the block type.

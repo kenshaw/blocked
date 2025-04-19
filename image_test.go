@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-func TestBitmapSetGet(t *testing.T) {
+func TestSetGet(t *testing.T) {
 	const mask = 0b10101010
 	for _, h := range []int{2, 4, 6, 8, 10, 12, 16, 24, 28, 34, 56} {
 		for _, w := range []int{2, 4, 6, 8, 10, 12, 16, 24, 28, 34, 56} {
@@ -62,22 +62,22 @@ func TestBitmapSetGet(t *testing.T) {
 				if !slices.Equal(img1.Pix, img2.Pix) {
 					t.Errorf("expected:\n%b\ngot:\n%b", img1.Pix, img2.Pix)
 				}
-				if !strings.Contains(os.Getenv("TESTS"), "image") {
-					return
-				}
-				var buf bytes.Buffer
-				if err := png.Encode(&buf, img2); err != nil {
-					t.Fatalf("expected no error, got: %v", err)
-				}
-				if err := os.WriteFile(fmt.Sprintf("test_%02d_%02d.png", h, w), buf.Bytes(), 0o644); err != nil {
-					t.Fatalf("expected no error, got: %v", err)
-				}
+				/*
+					var buf bytes.Buffer
+					if err := png.Encode(&buf, img2); err != nil {
+						t.Fatalf("expected no error, got: %v", err)
+					}
+					name := filepath.Join("testdata", fmt.Sprintf("test_%02d_%02d.png", w, h))
+					if err := os.WriteFile(name, buf.Bytes(), 0o644); err != nil {
+						t.Fatalf("expected no error, got: %v", err)
+					}
+				*/
 			})
 		}
 	}
 }
 
-func TestNewBitmap(t *testing.T) {
+func TestBitmap(t *testing.T) {
 	for seed := 1330; seed <= 1343; seed++ {
 		t.Run(strconv.Itoa(seed), func(t *testing.T) {
 			r := rand.New(rand.NewSource(int64(seed)))
@@ -162,6 +162,7 @@ func TestNewBitmap(t *testing.T) {
 					}
 				})
 			}
+			t.Logf("Auto (%s):\n%v", Best(img.Rect.Dy()), img)
 		})
 	}
 }

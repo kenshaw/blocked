@@ -11,17 +11,17 @@ type Type rune
 
 // Block types.
 const (
-	Auto              Type = 'a'
+	Auto              Type = 'v'
 	Solids            Type = 'l'
 	Binaries          Type = 'b'
-	XXs               Type = 'x'
+	XXs               Type = 'L'
 	Doubles           Type = 'D'
-	Halves            Type = 'v'
-	ASCIIs            Type = 'V'
+	Halves            Type = 'e'
+	ASCIIs            Type = 'E'
 	Quads             Type = 'q'
 	QuadsSeparated    Type = 'Q'
-	Sextants          Type = 's'
-	SextantsSeparated Type = 'S'
+	Sextants          Type = 'x'
+	SextantsSeparated Type = 'X'
 	Octants           Type = 'o'
 	Braille           Type = 'O'
 )
@@ -263,16 +263,16 @@ func toMap(v []rune) map[uint8]rune {
 	return m
 }
 
-// Best returns the best (most compact) block type.
+// Best returns the best display block type for the height.
 func Best(y int) Type {
 	switch {
 	case y == 1:
 		return Solids
-	case y == 2:
+	case y <= 3:
 		return Halves
-	case y <= 4:
+	case y < 6:
 		return Quads
-	case y <= 6:
+	case y <= 24:
 		return Sextants
 	}
 	return Octants
