@@ -229,3 +229,14 @@ Output:
 |⢪⠃⣲⣽⣜⣳⡈⡷⠕⢜⠷⡘⢐⡴⡰⡜⠷⠯⢨⠚⠨⢅⣸⢐⠪⡫⡥⢳⢇⠘⠐⡳|
 |⡱⠑⢗⢃⢹⡹⠚⢇⢎⣺⢙⣚⢄⠋⢐⡐⠀⠷⢖⠠⣋⣍⢀⢨⠃⣚⢍⣡⢛⣢⢹⢖|
 ```
+
+## Links
+
+The following sites/issues/code/... were referenced during development:
+
+- [Amp-What](https://www.amp-what.com/unicode/search/blocks)
+- [PhMajerus' unicode block cheat sheets](https://github.com/PhMajerus/Documents/blob/main/CheatSheets/Blocks%20tables.txt)
+- [Kang-Che Sung's `octant_bits_to_unicode.c`](https://gitlab.com/-/snippets/3710003)
+- [github.com/hpjansson/chafa](https://github.com/hpjansson/chafa) - a command-line utility that converts images into ANSI/Unicode graphics
+- [microsoft/cascadia-code issue 647](https://github.com/microsoft/cascadia-code/issues/647)
+- [microsoft/cascadia-code issue 711](https://github.com/microsoft/cascadia-code/issues/711)
