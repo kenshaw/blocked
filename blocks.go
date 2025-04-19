@@ -169,7 +169,7 @@ func BrailleRunes() []rune {
 
 // Dump dumps a ASCII drawing of the bitmask of the symobls to the writer.
 //
-// Used to verify the symbols for different [Type]s.
+// Used to verify the symbols for different [Type]'s.
 func Dump(w io.Writer, syms map[uint8]rune) {
 	n := len(syms)
 	for i := range n {

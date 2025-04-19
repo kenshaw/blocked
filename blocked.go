@@ -7,22 +7,22 @@ import (
 )
 
 // Type is a block type.
-type Type int
+type Type rune
 
 // Block types.
 const (
-	Auto Type = iota
-	Solids
-	Binaries
-	XXs
-	Halves
-	ASCIIs
-	Quads
-	QuadsSeparated
-	Sextants
-	SextantsSeparated
-	Octants
-	Braille
+	Auto              Type = 'a'
+	Solids            Type = 'l'
+	Binaries          Type = 'b'
+	XXs               Type = 'x'
+	Halves            Type = 'v'
+	ASCIIs            Type = 'V'
+	Quads             Type = 'q'
+	QuadsSeparated    Type = 'Q'
+	Sextants          Type = 's'
+	SextantsSeparated Type = 'S'
+	Octants           Type = 'o'
+	Braille           Type = 'O'
 )
 
 // Types returns all block types.
@@ -78,6 +78,11 @@ func (typ Type) Contiguous() bool {
 		return true
 	}
 	return false
+}
+
+// Rune returns the verb rune for the type
+func (typ Type) Rune() rune {
+	return rune(typ)
 }
 
 // RuneCount returns the number of runes for the block type.

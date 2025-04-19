@@ -2,6 +2,7 @@ package blocked
 
 import (
 	"bufio"
+	"encoding/binary"
 	"errors"
 	"image"
 	"image/color"
@@ -48,8 +49,27 @@ func NewBitmap(rect image.Rectangle) Bitmap {
 	}
 }
 
-// NewBitmapFromReader creates a new bitmap from the reader. Reads x pixels per
-// line.
+// New creates a new bitmap from data with width x.
+func New(data any, x int) (Bitmap, error) {
+	r, w := io.Pipe()
+	var werr error
+	go func() {
+		defer w.Close()
+		if werr = binary.Write(w, binary.NativeEndian, data); werr != nil {
+			return
+		}
+	}()
+	img, err := NewBitmapFromReader(r, x)
+	if err != nil {
+		return Bitmap{}, err
+	}
+	if err := r.Close(); err != nil {
+		return Bitmap{}, err
+	}
+	return img, nil
+}
+
+// NewBitmapFromReader creates a new bitmap from the reader of width x.
 //
 // TODO: allow compact byte streams.
 func NewBitmapFromReader(r io.Reader, x int) (Bitmap, error) {
