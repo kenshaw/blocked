@@ -60,7 +60,7 @@ func Example() {
 			// fmt.Println(buf.String())
 
 			// to work around with comment formatting issues in Go examples,
-			// add pipes to surround the data:
+			// add pipes to surround the output:
 			s := "|" + strings.ReplaceAll(buf.String(), "\n", "|\n|") + "|"
 			fmt.Println(s)
 		}
