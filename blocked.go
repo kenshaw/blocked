@@ -165,7 +165,8 @@ func (typ Type) Runes() []rune {
 	return nil
 }
 
-// Dump dumps a ASCII drawing of the bitmask the block type's symbols to the writer.
+// Dump dumps a ASCII drawing of the bitmask the block type's symbols to the
+// writer.
 func (typ Type) Dump(w io.Writer) {
 	if m := typ.runeMap(); m != nil {
 		Dump(w, m)

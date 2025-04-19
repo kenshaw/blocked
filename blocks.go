@@ -14,14 +14,16 @@ func SolidsRunes() []rune {
 	}
 }
 
-// BinariesRunes returns the runes for single block resolution bitmaps using '0', '1'.
+// BinariesRunes returns the runes for single block resolution bitmaps using
+// '0', '1'.
 func BinariesRunes() []rune {
 	return []rune{
 		'0', '1',
 	}
 }
 
-// XXsRunes returns the runes for single block resolution bitmaps using ' ', 'X'.
+// XXsRunes returns the runes for single block resolution bitmaps using ' ',
+// 'X'.
 func XXsRunes() []rune {
 	return []rune{
 		' ', 'X',
@@ -73,8 +75,8 @@ func SextantsRunes() []rune {
 	}
 }
 
-// SextantsSeparatedRunes returns the runes for sextuple block resolution images
-// using separated sextants.
+// SextantsSeparatedRunes returns the runes for sextuple block resolution
+// images using separated sextants.
 func SextantsSeparatedRunes() []rune {
 	return []rune{
 		' ', '𜹑', '𜹒', '𜹓', '𜹔', '𜹕', '𜹖', '𜹗',
@@ -185,7 +187,7 @@ func Dump(w io.Writer, syms map[uint8]rune) {
 		if i != 0 {
 			fmt.Fprintln(w)
 		}
-		v := splitMask(width, uint8(i))
+		v := splitMask(uint8(i), width)
 		fmt.Fprintf(w, "%3d: |%s| │%c│\n", i, v[0], syms[uint8(i)])
 		for j := 1; j < len(v); j++ {
 			fmt.Fprintf(w, "%3s  |%s|\n", "", v[j])
@@ -193,8 +195,10 @@ func Dump(w io.Writer, syms map[uint8]rune) {
 	}
 }
 
-// splitMask splits a mask.
-func splitMask(width int, i uint8) []string {
+// splitMask splits a mask into n lines of m runes per line, where n is the `8 - width`
+// signficant bits of i. If width is less than or equal to 2, each line will be
+// 1 rune, otherwise each line will be 2 runes.
+func splitMask(i uint8, width int) []string {
 	s := maskRepl.Replace(fmt.Sprintf("%0*b", width, bits.Reverse8(uint8(i))>>(8-width)))
 	var v []string
 	n := 2
@@ -207,7 +211,7 @@ func splitMask(width int, i uint8) []string {
 	return v
 }
 
-// maskRepl handles replacing '0', '1' with ' ', 'X'.
+// maskRepl replaces '0', '1' with ' ', 'X'.
 var maskRepl = strings.NewReplacer(
 	"0", " ",
 	"1", "X",

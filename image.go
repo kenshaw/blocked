@@ -10,9 +10,11 @@ import (
 )
 
 var (
-	// DefaultScaleWidth is the default pixel width scale when bitmaps used as [image.Image].
+	// DefaultScaleWidth is the default pixel width scale when bitmaps used as
+	// [image.Image].
 	DefaultScaleWidth uint = 24
-	// DefaultScaleHeight is the default pixel height scale when bitmaps used as [image.Image].
+	// DefaultScaleHeight is the default pixel height scale when bitmaps used
+	// as [image.Image].
 	DefaultScaleHeight uint = 24
 )
 
@@ -46,7 +48,8 @@ func NewBitmap(rect image.Rectangle) Bitmap {
 	}
 }
 
-// NewBitmapFromReader creates a new bitmap from the reader. Reads x pixels per line.
+// NewBitmapFromReader creates a new bitmap from the reader. Reads x pixels per
+// line.
 //
 // TODO: allow compact byte streams.
 func NewBitmapFromReader(r io.Reader, x int) (Bitmap, error) {
