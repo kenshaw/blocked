@@ -183,7 +183,7 @@ func BrailleRunes() []rune {
 	}
 }
 
-// Dump dumps a ASCII drawing of the bitmask of the symobls to the writer.
+// Dump dumps a ASCII drawing of the bitmask of the symbols to the writer.
 //
 // Used to verify the symbols for different [Type]'s.
 func Dump(w io.Writer, syms map[uint8]rune) {
@@ -212,10 +212,10 @@ func Dump(w io.Writer, syms map[uint8]rune) {
 }
 
 // splitMask splits a mask into n lines of m runes per line, where n is the `8 - width`
-// signficant bits of i. If width is less than or equal to 2, each line will be
-// 1 rune, otherwise each line will be 2 runes.
+// significant bits of i. If width is less than or equal to 2, each line will
+// be 1 rune, otherwise each line will be 2 runes.
 func splitMask(i uint8, width int) []string {
-	s := maskRepl.Replace(fmt.Sprintf("%0*b", width, bits.Reverse8(uint8(i))>>(8-width)))
+	s := maskRepl.Replace(fmt.Sprintf("%0*b", width, bits.Reverse8(i)>>(8-width)))
 	var v []string
 	n := 2
 	if width <= 2 {

@@ -84,7 +84,7 @@ func (typ Type) Contiguous() bool {
 	return false
 }
 
-// Rune returns the verb rune for the type
+// Rune returns the verb rune for the type.
 func (typ Type) Rune() rune {
 	return rune(typ)
 }

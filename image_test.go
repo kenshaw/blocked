@@ -26,7 +26,7 @@ func TestBitmapSetGet(t *testing.T) {
 					n /= 8
 				}
 				pix := make([]byte, n*h)
-				for i := range len(pix) {
+				for i := range pix {
 					pix[i] = mask
 				}
 				// clear upper bits

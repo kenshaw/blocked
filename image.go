@@ -141,10 +141,10 @@ func (img Bitmap) At(x, y int) color.Color {
 // Width returns the width for the block type.
 func (img Bitmap) Width(typ Type) int {
 	x, w := img.Rect.Dx(), typ.Width()
-	if typ == Doubles {
+	switch {
+	case typ == Doubles:
 		return x * 2
-	}
-	if x%w != 0 {
+	case x%w != 0:
 		return x/w + 1
 	}
 	return x / w
@@ -319,7 +319,7 @@ func enc2x4(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) (err err
 	for y := 0; y < h; y += 4 {
 		for x := 0; x < w; x += 2 {
 			d, m = x/8, x%8
-			b = buf[(y)*n+d]&(0b11<<m)>>m |
+			b = buf[y*n+d]&(0b11<<m)>>m |
 				buf[(y+1)*n+d]&(0b11<<m)>>m<<2 |
 				buf[(y+2)*n+d]&(0b11<<m)>>m<<4 |
 				buf[(y+3)*n+d]&(0b11<<m)>>m<<6
