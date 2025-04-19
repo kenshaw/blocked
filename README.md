@@ -7,8 +7,6 @@ Package `blocked` provides unicode block encoding for binary data.
 [![Releases][release-status]][Releases]
 [![Discord Discussion][discord-status]][discord]
 
-![blocked sample output](screenshot.png)
-
 [blocked-ci]: https://github.com/kenshaw/blocked/actions/workflows/test.yml "Test CI"
 [blocked-ci-status]: https://github.com/kenshaw/blocked/actions/workflows/test.yml/badge.svg "Test CI"
 [goref-blocked]: https://pkg.go.dev/github.com/kenshaw/blocked "Go Reference"
