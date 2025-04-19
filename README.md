@@ -25,28 +25,28 @@ Enables displaying binary bit data using Unicode blocks such as [sextants][],
 
 The following [block types][b-type] are currently supported:
 
-| Name                          | Description                                     |
-| ----------------------------- | ----------------------------------------------- |
-| **Singles (1x1 blocks)**      |                                                 |
-| [`Solids`][b-type]            | [Solid full block and space][solids] (` `, `█`) |
-| [`Binaries`][b-type]          | Binary digits (`0`, `1`)                        |
-| [`XXs`][b-type]               | Binary mask characters (` `, `X`)               |
-|                               |                                                 |
-| **Doubles (1x2 blocks)**      |                                                 |
-| [`Halves`][b-type]            | [Half blocks][halves]                           |
-| [`ASCIIs`][b-type]            | ASCII-safe characters (` `, `^`, `v`, `%`)      |
-|                               |                                                 |
-| **Quads (2x2 blocks)**        |                                                 |
-| [`Quads`][b-type]             | [Quarter blocks][quads]                         |
-| [`QuadsSeparated`][b-type]    | [Quarter blocks, separated][quads-sep]          |
-|                               |                                                 |
-| **Sextants (2x3 blocks)**     |                                                 |
-| [`Sextants`][b-type]          | [Sextant blocks][sextants]                      |
-| [`SextantsSeparated`][b-type] | [Sextant blocks, separated][sextants-sep]       |
-|                               |                                                 |
-| **Octants (2x4 blocks)**      |                                                 |
-| [`Octants`][b-type]           | [Octant blocks (Unicode-16)][octants]           |
-| [`Braille`][b-type]           | [Braille glyphs][braille]                       |
+|                               | Description                                |            Def            |
+| :---------------------------- | :----------------------------------------- | :-----------------------: |
+| **Singles (1x1 blocks)**      |                                            |                           |
+| [`Solids`][b-type]            | [Full block][solids] (` `, `█`)            |       [≝][b-solids]       |
+| [`Binaries`][b-type]          | Binary digits (`0`, `1`)                   |      [≝][b-binaries]      |
+| [`XXs`][b-type]               | Binary mask characters (` `, `X`)          |        [≝][b-xxs]         |
+|                               |                                            |                           |
+| **Doubles (1x2 blocks)**      |                                            |                           |
+| [`Halves`][b-type]            | [Half blocks][halves]                      |       [≝][b-halves]       |
+| [`ASCIIs`][b-type]            | ASCII-safe characters (` `, `^`, `v`, `%`) |       [≝][b-asciis]       |
+|                               |                                            |                           |
+| **Quads (2x2 blocks)**        |                                            |                           |
+| [`Quads`][b-type]             | [Quarter blocks][quads]                    |       [≝][b-quads]        |
+| [`QuadsSeparated`][b-type]    | [Quarter blocks, separated][quads-sep]     |  [≝][b-quads-separated]   |
+|                               |                                            |                           |
+| **Sextants (2x3 blocks)**     |                                            |                           |
+| [`Sextants`][b-type]          | [Sextant blocks][sextants]                 |      [≝][b-sextants]      |
+| [`SextantsSeparated`][b-type] | [Sextant blocks, separated][sextants-sep]  | [≝][b-sextants-separated] |
+|                               |                                            |                           |
+| **Octants (2x4 blocks)**      |                                            |                           |
+| [`Octants`][b-type]           | [Octant blocks (Unicode-16)][octants]      |      [≝][b-octants]       |
+| [`Braille`][b-type]           | [Braille glyphs][braille]                  |      [≝][b-braille]       |
 
 [solids]: https://www.amp-what.com/unicode/search/full%20block
 [halves]: https://www.amp-what.com/unicode/search/half%20block
@@ -57,6 +57,17 @@ The following [block types][b-type] are currently supported:
 [octants]: https://www.amp-what.com/unicode/search/octants
 [braille]: https://www.amp-what.com/unicode/search/braille
 [b-type]: https://pkg.go.dev/github.com/kenshaw/blocked#Type
+[b-solids]: https://pkg.go.dev/github.com/kenshaw/blocked#SolidsRunes
+[b-binaries]: https://pkg.go.dev/github.com/kenshaw/blocked#BinariesRunes
+[b-xxs]: https://pkg.go.dev/github.com/kenshaw/blocked#XXsRunes
+[b-halves]: https://pkg.go.dev/github.com/kenshaw/blocked#HalvesRunes
+[b-asciis]: https://pkg.go.dev/github.com/kenshaw/blocked#ASCIIsRunes
+[b-quads]: https://pkg.go.dev/github.com/kenshaw/blocked#QuadsRunes
+[b-quads-separated]: https://pkg.go.dev/github.com/kenshaw/blocked#QuadsSeparatedRunes
+[b-sextants]: https://pkg.go.dev/github.com/kenshaw/blocked#SextantsRunes
+[b-sextants-separated]: https://pkg.go.dev/github.com/kenshaw/blocked#SextantsSeparatedRunes
+[b-octants]: https://pkg.go.dev/github.com/kenshaw/blocked#OctantsRunes
+[b-braille]: https://pkg.go.dev/github.com/kenshaw/blocked#BrailleRunes
 
 ## Using
 
