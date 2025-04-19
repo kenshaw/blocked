@@ -50,7 +50,8 @@ func NewBitmap(rect image.Rectangle) Bitmap {
 	}
 }
 
-// New creates a new bitmap from data with width x.
+// New creates a new bitmap from data with width x. Passed data can be any type
+// that works with [binary.Write].
 func New(data any, x int) (Bitmap, error) {
 	r, w := io.Pipe()
 	var werr error
