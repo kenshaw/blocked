@@ -1,7 +1,7 @@
 package blocked
 
 import (
-	"bufio"
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -12,10 +12,10 @@ import (
 )
 
 var (
-	// DefaultScaleWidth is the default pixel width scale when bitmaps used as
+	// DefaultScaleWidth is the pixel width scale for bitmaps used as
 	// [image.Image].
 	DefaultScaleWidth uint = 24
-	// DefaultScaleHeight is the default pixel height scale when bitmaps used
+	// DefaultScaleHeight is the pixel height scale for bitmaps used
 	// as [image.Image].
 	DefaultScaleHeight uint = 24
 )
@@ -31,14 +31,64 @@ type Bitmap struct {
 	Transparent color.Alpha16
 }
 
-// NewBitmap creates a new bitmap.
-func NewBitmap(rect image.Rectangle) Bitmap {
-	stride := rect.Dx()
-	if stride%8 != 0 {
-		stride = stride/8 + 1
-	} else {
-		stride /= 8
+// New creates a new bitmap from data with width x. Data can be any type that
+// works with [binary.Write].
+func New(data any, x int) (Bitmap, error) {
+	var buf bytes.Buffer
+	if err := binary.Write(&buf, binary.NativeEndian, data); err != nil {
+		return Bitmap{}, err
 	}
+	return NewReader(&buf, x)
+}
+
+// NewReader creates a new bitmap from the reader with bit width x.
+func NewReader(r io.Reader, x int) (Bitmap, error) {
+	data, buf := make([]byte, 0, 512), make([]byte, 512)
+	var err error
+	var c int
+loop: // read
+	for {
+		switch c, err = r.Read(buf); {
+		case errors.Is(err, io.EOF):
+			break loop
+		case err != nil:
+			return Bitmap{}, err
+		}
+		data = append(data, buf[:c]...)
+	}
+	return NewBytes(data, x, (len(data)*8+7)/x)
+}
+
+// NewBytes creates a new bitmap from for the unaligned bytes in data with
+// width x, height y.
+func NewBytes(data []byte, x, y int) (Bitmap, error) {
+	stride := (x + 7) / 8
+	n := stride * y
+	pix := make([]byte, n)
+	//fmt.Fprintf(os.Stderr, ">>> x:%d y:%d n:%d\n", x, y, n)
+	// realign
+	/*
+		fmt.Fprintf(os.Stderr, ">>> x:%d y:%d n:%d\n", x, y, n)
+		// realign
+		if m := x % 8; m != 0 {
+			for b, i := uint(8), stride; i < n; i += stride {
+				b, i = b, i
+			}
+		}
+	*/
+	copy(pix, data)
+	return Bitmap{
+		Pix:         pix,
+		Stride:      stride,
+		ScaleWidth:  DefaultScaleWidth,
+		ScaleHeight: DefaultScaleHeight,
+		Rect:        image.Rect(0, 0, x, y),
+	}, nil
+}
+
+// NewImage creates a blank bitmap image with dimensions in rect.
+func NewImage(rect image.Rectangle) Bitmap {
+	stride := (rect.Dx() + 7) / 8
 	return Bitmap{
 		Pix:         make([]uint8, stride*rect.Dy()),
 		Stride:      stride,
@@ -48,58 +98,6 @@ func NewBitmap(rect image.Rectangle) Bitmap {
 		Opaque:      color.Opaque,
 		Transparent: color.Transparent,
 	}
-}
-
-// New creates a new bitmap from data with width x. Passed data can be any type
-// that works with [binary.Write].
-func New(data any, x int) (Bitmap, error) {
-	r, w := io.Pipe()
-	var werr error
-	go func() {
-		defer w.Close()
-		if werr = binary.Write(w, binary.NativeEndian, data); werr != nil {
-			return
-		}
-	}()
-	img, err := NewBitmapFromReader(r, x)
-	if err != nil {
-		return Bitmap{}, err
-	}
-	if err := r.Close(); err != nil {
-		return Bitmap{}, err
-	}
-	return img, nil
-}
-
-// NewBitmapFromReader creates a new bitmap from the reader of width x.
-//
-// TODO: allow compact byte streams.
-func NewBitmapFromReader(r io.Reader, x int) (Bitmap, error) {
-	var stride int
-	if x%8 != 0 {
-		stride = x/8 + 1
-	} else {
-		stride = x / 8
-	}
-	pix, buf := make([]byte, 0, 512), make([]byte, stride)
-	var err error
-loop:
-	for br := bufio.NewReader(r); ; {
-		switch _, err = br.Read(buf); {
-		case errors.Is(err, io.EOF):
-			break loop
-		case err != nil:
-			return Bitmap{}, err
-		}
-		pix = append(pix, buf...)
-	}
-	return Bitmap{
-		Pix:         pix,
-		Stride:      stride,
-		ScaleWidth:  DefaultScaleWidth,
-		ScaleHeight: DefaultScaleHeight,
-		Rect:        image.Rect(0, 0, x, len(pix)/stride),
-	}, nil
 }
 
 // Set sets the bit at x, y.
@@ -142,23 +140,18 @@ func (img Bitmap) At(x, y int) color.Color {
 
 // Width returns the width for the block type.
 func (img Bitmap) Width(typ Type) int {
-	x, w := img.Rect.Dx(), typ.Width()
-	switch {
-	case typ == Doubles:
+	x := img.Rect.Dx()
+	if typ == Doubles {
 		return x * 2
-	case x%w != 0:
-		return x/w + 1
 	}
-	return x / w
+	w := typ.Width()
+	return (x + w - 1) / w
 }
 
 // Height returns the height for the block type.
 func (img Bitmap) Height(typ Type) int {
-	y, h := img.Rect.Dy(), typ.Height()
-	if y%h != 0 {
-		return y/h + 1
-	}
-	return y / h
+	h := typ.Height()
+	return (img.Rect.Dy() + h - 1) / h
 }
 
 // Format satisfies the [fmt.Formatter] interface.
@@ -174,7 +167,7 @@ func (img Bitmap) Format(f fmt.State, verb rune) {
 		Sextants, SextantsSeparated,
 		Octants, Braille:
 		if err := img.Encode(f, typ); err != nil {
-			fmt.Fprintf(f, "%%!(ERROR: %v)", err)
+			fmt.Fprintf(f, "%%!%c(ERROR: %v)", verb, err)
 		}
 	default:
 		fmt.Fprintf(f, "%%!%c(BAD VERB)", verb)

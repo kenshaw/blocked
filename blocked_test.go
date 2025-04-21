@@ -9,6 +9,7 @@ import (
 func TestBlocks(t *testing.T) {
 	for _, typ := range Types() {
 		t.Run(typ.String(), func(t *testing.T) {
+			t.Parallel()
 			m, exp := typ.runeMap(), typ.RuneCount()
 			for i := range exp {
 				if _, ok := m[uint8(i)]; !ok {

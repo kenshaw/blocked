@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"image/png"
+	"io"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -14,17 +15,13 @@ import (
 	"testing"
 )
 
-func TestSetGet(t *testing.T) {
+func TestNewImage(t *testing.T) {
 	const mask = 0b10101010
 	for _, h := range []int{2, 4, 6, 8, 10, 12, 16, 24, 28, 34, 56} {
 		for _, w := range []int{2, 4, 6, 8, 10, 12, 16, 24, 28, 34, 56} {
 			t.Run(fmt.Sprintf("%02d_%02d", w, h), func(t *testing.T) {
-				n := w
-				if n%8 != 0 {
-					n = n/8 + 1
-				} else {
-					n /= 8
-				}
+				t.Parallel()
+				n := (w + 7) / 8
 				pix := make([]byte, n*h)
 				for i := range pix {
 					pix[i] = mask
@@ -52,7 +49,7 @@ func TestSetGet(t *testing.T) {
 					}
 				}
 				// create
-				img2 := NewBitmap(image.Rect(0, 0, w, h))
+				img2 := NewImage(image.Rect(0, 0, w, h))
 				for y := range img2.Rect.Dy() {
 					for x := range img2.Rect.Dx() {
 						img2.Set(x, y, x%2 == 1)
@@ -80,8 +77,9 @@ func TestSetGet(t *testing.T) {
 func TestBitmap(t *testing.T) {
 	for seed := 1330; seed <= 1343; seed++ {
 		t.Run(strconv.Itoa(seed), func(t *testing.T) {
+			t.Parallel()
 			r := rand.New(rand.NewSource(int64(seed)))
-			img := NewBitmap(image.Rect(0, 0, 1+r.Intn(28), 1+r.Intn(28)))
+			img := NewImage(image.Rect(0, 0, 1+r.Intn(28), 1+r.Intn(28)))
 			rect := img.Rect
 			w, h, expTr, expFa := rect.Dx(), rect.Dy(), 0, 0
 			for y := range h {
@@ -165,4 +163,36 @@ func TestBitmap(t *testing.T) {
 			t.Logf("Auto (%s):\n%v", Best(img.Rect.Dy()), img)
 		})
 	}
+}
+
+func TestNewReader(t *testing.T) {
+	for y := 1; y < 135; y++ {
+		for x := 1; x < 135; x++ {
+			t.Run(fmt.Sprintf("%03d_%03d", x, y), func(t *testing.T) {
+				t.Parallel()
+				img, err := NewReader(newOneReader(x, y), x)
+				if err != nil {
+					t.Fatalf("expected no error, got: %v", err)
+				}
+				for i := 0; i < len(img.Pix); i += img.Stride {
+					t.Logf("% 3d: %b", i/img.Stride+1, img.Pix[i:i+img.Stride])
+				}
+			})
+		}
+	}
+}
+
+type oneReader struct{}
+
+func newOneReader(x, y int) io.Reader {
+	n := x * y
+	return io.LimitReader(&oneReader{}, int64((n+7)/8))
+}
+
+func (r *oneReader) Read(buf []byte) (int, error) {
+	n := len(buf)
+	for i := range n {
+		buf[i] = 0xff
+	}
+	return n, nil
 }

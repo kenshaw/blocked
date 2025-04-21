@@ -184,18 +184,6 @@ func (typ Type) Dump(w io.Writer) {
 	}
 }
 
-/*
-// Encode encodes the bitmap to the writer.
-func (typ Type) Encode(w io.Writer, img Bitmap, opts ...EncoderOption) error {
-	return NewEncoder(opts...).Encode(w, img)
-}
-
-// Decode decodes a bitmap from the reader.
-func (typ Type) Decode(r io.Reader, img *Bitmap, opts ...DecoderOption) error {
-	return NewDecoder(opts...).Decode(r, img)
-}
-*/
-
 // runeMap returns the rune map for the type.
 func (typ Type) runeMap() map[uint8]rune {
 	switch typ {
