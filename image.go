@@ -137,7 +137,7 @@ func (img Bitmap) At(x, y int) color.Color {
 // Width returns the width for the block type.
 func (img Bitmap) Width(typ Type) int {
 	x := img.Rect.Dx()
-	if typ == Doubles {
+	if typ.Width() == 0 {
 		return x * 2
 	}
 	w := typ.Width()
@@ -178,7 +178,7 @@ func (img Bitmap) Encode(w io.Writer, typ Type) error {
 	}
 	var f func(io.Writer, []byte, int, int, int, map[uint8]rune) error
 	switch w, h := typ.Width(), typ.Height(); {
-	case typ == Doubles:
+	case w == 0:
 		f = enc0_5x1
 	case w == 1 && h == 1:
 		f = enc1x1
@@ -206,7 +206,8 @@ func (img Bitmap) scale() (int, int) {
 	return int(w), int(h)
 }
 
-// enc0_5x1 encodes 0.5x1 blocks to the writer. Special case for [Doubles].
+// enc0_5x1 encodes 0.5x1 blocks to the writer, used when width == 0 for the
+// [Type].
 func enc0_5x1(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) (err error) {
 	m, b, v, o := 0, uint8(0), make([]byte, 8), 0
 	for y := range h {

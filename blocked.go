@@ -110,7 +110,9 @@ func (typ Type) RuneCount() int {
 // Width returns the width for the block type.
 func (typ Type) Width() int {
 	switch typ {
-	case Solids, Binaries, XXs, Doubles, Halves, ASCIIs:
+	case Doubles:
+		return 0
+	case Solids, Binaries, XXs, Halves, ASCIIs:
 		return 1
 	case Quads, QuadsSeparated, Sextants, SextantsSeparated, Octants, Braille:
 		return 2
