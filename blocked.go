@@ -12,19 +12,34 @@ type Type rune
 
 // Block types.
 const (
-	Auto              Type = 'v'
-	Solids            Type = 'l'
-	Binaries          Type = 'b'
-	XXs               Type = 'L'
-	Doubles           Type = 'D'
-	Halves            Type = 'e'
-	ASCIIs            Type = 'E'
-	Quads             Type = 'q'
-	QuadsSeparated    Type = 'Q'
-	Sextants          Type = 'x'
+	// Auto uses [Best] to determine the best, contiguous block type to use for
+	// a provided height.
+	Auto Type = 'v'
+	// Solids are single, 1x1 blocks using [SolidsRunes].
+	Solids Type = 'l'
+	// Binaries are single, 1x1 blocks using binary digits using [BinariesRunes].
+	Binaries Type = 'b'
+	// XXs are single, 1x1 blocks using [XXsRunes].
+	XXs Type = 'L'
+	// Doubles are single, 0.5x1 double wide blocks using [SolidsRunes].
+	Doubles Type = 'D'
+	// Halves are 1x2 double tall blocks using [HalvesRunes].
+	Halves Type = 'e'
+	// Halves are 1x2 double tall blocks using ASCII-safe runes using
+	// [ASCIIsRunes].
+	ASCIIs Type = 'E'
+	// Quads are 3x2 quarter blocks using [QuadsRunes].
+	Quads Type = 'q'
+	// QuadsSeparated are 2x2 quarter blocks using [QuadsSeparatedRunes].
+	QuadsSeparated Type = 'Q'
+	// Sextants are 2x3 blocks using [SextantsRunes].
+	Sextants Type = 'x'
+	// SextantsSeparated are 2x3 blocks using [SextantsSeparatedRunes].
 	SextantsSeparated Type = 'X'
-	Octants           Type = 'o'
-	Braille           Type = 'O'
+	// Octants are 2x4 blocks using [OctantsRunes].
+	Octants Type = 'o'
+	// Braille are 2x4 blocks using [BrailleRunes].
+	Braille Type = 'O'
 )
 
 // Types returns all block types.
