@@ -4,6 +4,7 @@ package blocked
 import (
 	"io"
 	"maps"
+	"sync"
 )
 
 // Type is a block type.
@@ -187,68 +188,26 @@ func (typ Type) Dump(w io.Writer) {
 // runeMap returns the rune map for the type.
 func (typ Type) runeMap() map[uint8]rune {
 	switch typ {
-	case Solids:
-		return solids
-	case Binaries:
-		return binaries
-	case XXs:
-		return xxs
-	case Doubles:
-		return solids
-	case Halves:
-		return halves
-	case ASCIIs:
-		return asciis
-	case Quads:
-		return quads
-	case QuadsSeparated:
-		return quadsSeparated
-	case Sextants:
-		return sextants
-	case SextantsSeparated:
-		return sextantsSeparated
-	case Octants:
-		return octants
-	case Braille:
-		return braille
+	case Solids, Binaries, XXs,
+		Doubles,
+		Halves, ASCIIs,
+		Quads, QuadsSeparated,
+		Sextants, SextantsSeparated,
+		Octants, Braille:
+		blocksMu.Lock()
+		defer blocksMu.Unlock()
+		b, ok := blocks[typ]
+		if !ok {
+			v := typ.Runes()
+			b = make(map[uint8]rune, len(v))
+			for i, r := range v {
+				b[uint8(i)] = r
+			}
+			blocks[typ] = b
+		}
+		return b
 	}
 	return nil
-}
-
-var (
-	// solids is the map for single block resolution bitmaps.
-	solids = toMap(SolidsRunes())
-	// binaries is the map for single block resolution bitmaps using '0', '1'.
-	binaries = toMap(BinariesRunes())
-	// xxs is the map for single block resolution bitmaps using ' ', 'X'.
-	xxs = toMap(XXsRunes())
-	// halves is the map for double block resolution bitmaps.
-	halves = toMap(HalvesRunes())
-	// asciis is the map for double block resolution bitmaps.
-	asciis = toMap(ASCIIsRunes())
-	// quads is the map for quadruple block resolution bitmaps.
-	quads = toMap(QuadsRunes())
-	// quadsSeparated is the map for quadruple block resolution bitmaps using
-	// separated quads.
-	quadsSeparated = toMap(QuadsSeparatedRunes())
-	// sextants is the map for sextuple block resolution bitmaps.
-	sextants = toMap(SextantsRunes())
-	// sextantsSeparated is the map for sextuple block resolution bitmaps using
-	// separated sextants.
-	sextantsSeparated = toMap(SextantsSeparatedRunes())
-	// octants is the map for octuple block resolution bitmaps.
-	octants = toMap(OctantsRunes())
-	// braille is the map for octuple block resolution bitmaps using braille.
-	braille = toMap(BrailleRunes())
-)
-
-// toMap converts a slice to a map.
-func toMap(v []rune) map[uint8]rune {
-	m := make(map[uint8]rune, len(v))
-	for i, r := range v {
-		m[uint8(i)] = r
-	}
-	return m
 }
 
 // Best returns the best display block type for the height.
@@ -265,3 +224,10 @@ func Best(y int) Type {
 	}
 	return Octants
 }
+
+var (
+	// blocks are the block maps.
+	blocks = make(map[Type]map[uint8]rune)
+	// blocksMu is the blocks mutex.
+	blocksMu sync.Mutex
+)
