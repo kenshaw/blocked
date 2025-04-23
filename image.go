@@ -78,11 +78,9 @@ func NewBytes(data []byte, x, y int) (Bitmap, error) {
 	*/
 	copy(pix, data)
 	return Bitmap{
-		Pix:         pix,
-		Stride:      stride,
-		ScaleWidth:  DefaultScaleWidth,
-		ScaleHeight: DefaultScaleHeight,
-		Rect:        image.Rect(0, 0, x, y),
+		Pix:    pix,
+		Stride: stride,
+		Rect:   image.Rect(0, 0, x, y),
 	}, nil
 }
 
@@ -93,8 +91,6 @@ func NewImage(rect image.Rectangle) Bitmap {
 		Pix:         make([]uint8, stride*rect.Dy()),
 		Stride:      stride,
 		Rect:        rect,
-		ScaleWidth:  DefaultScaleWidth,
-		ScaleHeight: DefaultScaleHeight,
 		Opaque:      color.Opaque,
 		Transparent: color.Transparent,
 	}
