@@ -80,8 +80,7 @@ func TestBitmap(t *testing.T) {
 			t.Parallel()
 			r := rand.New(rand.NewSource(int64(seed)))
 			img := NewImage(image.Rect(0, 0, 1+r.Intn(28), 1+r.Intn(28)))
-			rect := img.Rect
-			w, h, expTr, expFa := rect.Dx(), rect.Dy(), 0, 0
+			w, h, expTr, expFa := img.Rect.Dx(), img.Rect.Dy(), 0, 0
 			for y := range h {
 				for x := range w {
 					exp := r.Intn(3) != 0
@@ -100,7 +99,7 @@ func TestBitmap(t *testing.T) {
 			if expTr == 0 || expFa == 0 {
 				t.Fatal("invalid test -- no significant bits")
 			}
-			if n, exp := expTr+expFa, rect.Dx()*rect.Dy(); n != exp {
+			if n, exp := expTr+expFa, img.Rect.Dx()*img.Rect.Dy(); n != exp {
 				t.Fatalf("expected %d, got: %d", exp, n)
 			}
 			var tr, fa int
@@ -139,7 +138,6 @@ func TestBitmap(t *testing.T) {
 			for _, typ := range Types() {
 				t.Run(typ.String(), func(t *testing.T) {
 					var buf bytes.Buffer
-					t.Logf("%s:", typ)
 					w := img.Width(typ)
 					buf.WriteString(strings.Repeat("_", w) + "\n")
 					if err := img.Encode(&buf, typ); err != nil {
