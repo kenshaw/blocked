@@ -7,6 +7,7 @@ import (
 )
 
 func TestBlocks(t *testing.T) {
+	t.Parallel()
 	for _, typ := range Types() {
 		t.Run(typ.String(), func(t *testing.T) {
 			t.Parallel()

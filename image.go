@@ -18,6 +18,10 @@ var (
 	// DefaultScaleHeight is the pixel height scale for bitmaps used
 	// as [image.Image].
 	DefaultScaleHeight uint = 24
+	// DefaultOpaque is the default opaque color.
+	DefaultOpaque = color.Opaque
+	// DefaultTransparent is the default transparent color.
+	DefaultTransparent = color.Transparent
 )
 
 // Bitmap is a monotone bitmap image.
@@ -62,57 +66,46 @@ loop: // read
 // NewBytes creates a new bitmap from for the unaligned bytes in data with
 // width x, height y.
 func NewBytes(data []byte, x, y int) (Bitmap, error) {
-	stride := (x + 7) / 8
-	n := stride * y
-	pix := make([]byte, n)
-	//fmt.Fprintf(os.Stderr, ">>> x:%d y:%d n:%d\n", x, y, n)
-	// realign
-	/*
-		fmt.Fprintf(os.Stderr, ">>> x:%d y:%d n:%d\n", x, y, n)
-		// realign
-		if m := x % 8; m != 0 {
-			for b, i := uint(8), stride; i < n; i += stride {
-				b, i = b, i
-			}
-		}
-	*/
+	pix := make([]byte, (x*y+7)/8)
 	copy(pix, data)
+	if m := x * y % 8; m != 0 {
+		// clear upper bits of last byte
+		pix[len(pix)-1] &= 0xff >> (8 - m)
+	}
 	return Bitmap{
-		Pix:    pix,
-		Stride: stride,
-		Rect:   image.Rect(0, 0, x, y),
+		Pix:         pix,
+		Stride:      x,
+		Rect:        image.Rect(0, 0, x, y),
+		Opaque:      DefaultOpaque,
+		Transparent: DefaultTransparent,
 	}, nil
 }
 
 // NewImage creates a blank bitmap image with dimensions in rect.
 func NewImage(rect image.Rectangle) Bitmap {
-	stride := (rect.Dx() + 7) / 8
+	x := rect.Dx()
 	return Bitmap{
-		Pix:         make([]uint8, stride*rect.Dy()),
-		Stride:      stride,
+		Pix:         make([]uint8, (x*rect.Dy()+7)/8),
+		Stride:      x,
 		Rect:        rect,
-		Opaque:      color.Opaque,
-		Transparent: color.Transparent,
+		Opaque:      DefaultOpaque,
+		Transparent: DefaultTransparent,
 	}
 }
 
 // Set sets the bit at x, y.
 func (img Bitmap) Set(x, y int, b bool) {
-	if b {
-		img.Pix[y*img.Stride+x/8] |= 1 << (x % 8)
+	if i := y*img.Stride + x; b {
+		img.Pix[i/8] |= 1 << (i % 8)
 	} else {
-		img.Pix[y*img.Stride+x/8] &= ^(1 << (x % 8))
+		img.Pix[i/8] &= ^(1 << (i % 8))
 	}
 }
 
 // Get returns the bit at x, y.
 func (img Bitmap) Get(x, y int) bool {
-	return img.Pix[y*img.Stride+x/8]&(1<<(x%8)) != 0
-}
-
-// Byte returns the byte containing x, y.
-func (img Bitmap) Byte(x, y int) uint8 {
-	return img.Pix[y*img.Stride+x/8]
+	i := y*img.Stride + x
+	return img.Pix[i/8]&(1<<(i%8)) != 0
 }
 
 // ColorModel satisfies the [image.Image] interface.
@@ -122,13 +115,13 @@ func (img Bitmap) ColorModel() color.Model {
 
 // Bounds satisfies the [image.Image] interface.
 func (img Bitmap) Bounds() image.Rectangle {
-	w, h := img.scale()
+	w, h := img.Scale()
 	return image.Rect(0, 0, w*img.Rect.Dx(), h*img.Rect.Dy())
 }
 
 // At satisfies the [image.Image] interface.
 func (img Bitmap) At(x, y int) color.Color {
-	if w, h := img.scale(); img.Get(x/w, y/h) {
+	if w, h := img.Scale(); img.Get(x/w, y/h) {
 		return img.Opaque
 	}
 	return img.Transparent
@@ -136,12 +129,11 @@ func (img Bitmap) At(x, y int) color.Color {
 
 // Width returns the width for the block type.
 func (img Bitmap) Width(typ Type) int {
-	x := img.Rect.Dx()
-	if typ.Width() == 0 {
-		return x * 2
-	}
 	w := typ.Width()
-	return (x + w - 1) / w
+	if w == 0 {
+		return img.Stride * 2
+	}
+	return (img.Stride + w - 1) / w
 }
 
 // Height returns the height for the block type.
@@ -154,7 +146,7 @@ func (img Bitmap) Height(typ Type) int {
 func (img Bitmap) Format(f fmt.State, verb rune) {
 	switch typ := Type(verb); typ {
 	case Auto, 's':
-		typ = Best(img.Rect.Dy())
+		typ = img.Best()
 		fallthrough
 	case Solids, Binaries, XXs,
 		Doubles,
@@ -172,11 +164,10 @@ func (img Bitmap) Format(f fmt.State, verb rune) {
 
 // Encode encodes the bitmap to the writer using the block type.
 func (img Bitmap) Encode(w io.Writer, typ Type) error {
-	h := img.Rect.Dy()
 	if typ == Auto {
-		typ = Best(h)
+		typ = img.Best()
 	}
-	var f func(io.Writer, []byte, int, int, int, map[uint8]rune) error
+	var f func(io.Writer, []byte, int, int, map[uint8]rune) error
 	switch w, h := typ.Width(), typ.Height(); {
 	case w == 0:
 		f = enc0_5x1
@@ -191,11 +182,16 @@ func (img Bitmap) Encode(w io.Writer, typ Type) error {
 	case h == 4:
 		f = enc2x4
 	}
-	return f(w, img.Pix, img.Rect.Dx(), h, img.Stride, typ.runeMap())
+	return f(w, img.Pix, img.Stride, img.Rect.Dy(), typ.runeMap())
 }
 
-// scale returns the width and height scale.
-func (img Bitmap) scale() (int, int) {
+// Best returns the [Best] block type for the image.
+func (img Bitmap) Best() Type {
+	return Best(img.Rect.Dy())
+}
+
+// Scale returns the image width and height scale factors.
+func (img Bitmap) Scale() (int, int) {
 	w, h := img.ScaleWidth, img.ScaleHeight
 	if w == 0 {
 		w = max(1, DefaultScaleWidth)
@@ -208,12 +204,13 @@ func (img Bitmap) scale() (int, int) {
 
 // enc0_5x1 encodes 0.5x1 blocks to the writer, used when width == 0 for the
 // [Type].
-func enc0_5x1(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) (err error) {
-	m, b, v, o := 0, uint8(0), make([]byte, 8), 0
+func enc0_5x1(wr io.Writer, buf []byte, w, h int, syms map[uint8]rune) (err error) {
+	i, m, b, v, o := 0, 0, uint8(0), make([]byte, 8), 0
 	for y := range h {
 		for x := range w {
-			m = x % 8
-			b = buf[y*n+x/8] & (1 << m) >> m
+			i = y*w + x
+			m = i % 8
+			b = buf[i/8] & (1 << m) >> m
 			o = utf8.EncodeRune(v, syms[b])
 			copy(v[o:], v[:o])
 			if _, err = wr.Write(v[:2*o]); err != nil {
@@ -230,12 +227,13 @@ func enc0_5x1(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) (err e
 }
 
 // enc1x1 encodes 1x1 blocks to the writer.
-func enc1x1(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) (err error) {
-	m, b, v := 0, uint8(0), make([]byte, 4)
+func enc1x1(wr io.Writer, buf []byte, w, h int, syms map[uint8]rune) (err error) {
+	i, m, b, v := 0, 0, uint8(0), make([]byte, 4)
 	for y := range h {
 		for x := range w {
-			m = x % 8
-			b = buf[y*n+x/8] & (1 << m) >> m
+			i = y*w + x
+			m = i % 8
+			b = buf[i/8] & (1 << m) >> m
 			if _, err = wr.Write(v[:utf8.EncodeRune(v, syms[b])]); err != nil {
 				return err
 			}
@@ -250,16 +248,16 @@ func enc1x1(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) (err err
 }
 
 // enc1x2 encodes 1x2 blocks to the writer.
-func enc1x2(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) (err error) {
-	if h%2 != 0 {
-		buf = append(buf, make([]byte, n)...)
-	}
-	d, m, b, v := 0, 0, uint8(0), make([]byte, 4)
+func enc1x2(wr io.Writer, buf []byte, w, h int, syms map[uint8]rune) (err error) {
+	buf = append(buf, make([]byte, (w+7)/8*(h+1)/2)...)
+	i, d, m, b, v := 0, 0, 0, uint8(0), make([]byte, 4)
 	for y := 0; y < h; y += 2 {
 		for x := range w {
-			d, m = x/8, x%8
-			b = buf[y*n+d]&(1<<m)>>m |
-				buf[(y+1)*n+d]&(1<<m)>>m<<1
+			i = y*w + x
+			d, m = i/8, i%8
+			b = buf[d] & (1 << m) >> m
+			d, m = (i+w)/8, (i+w)%8
+			b |= buf[d] & (1 << m) >> m << 1
 			if _, err = wr.Write(v[:utf8.EncodeRune(v, syms[b])]); err != nil {
 				return err
 			}
@@ -274,16 +272,22 @@ func enc1x2(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) (err err
 }
 
 // enc2x2 encodes 2x2 blocks to the writer.
-func enc2x2(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) (err error) {
-	if h%2 != 0 {
-		buf = append(buf, make([]byte, n)...)
-	}
-	d, m, b, v := 0, 0, uint8(0), make([]byte, 4)
+func enc2x2(wr io.Writer, buf []byte, w, h int, syms map[uint8]rune) (err error) {
+	buf = append(buf, make([]byte, (w+7)/8*(h+3)/2)...)
+	i, d, m, b, v := 0, 0, 0, uint8(0), make([]byte, 4)
 	for y := 0; y < h; y += 2 {
 		for x := 0; x < w; x += 2 {
-			d, m = x/8, x%8
-			b = buf[y*n+d]&(0b11<<m)>>m |
-				buf[(y+1)*n+d]&(0b11<<m)>>m<<2
+			i = y*w + x
+			d, m = i/8, i%8
+			b = buf[d] & (1 << m) >> m
+			d, m = (i+w)/8, (i+w)%8
+			b |= buf[d] & (1 << m) >> m << 2
+			if x+2 <= w {
+				d, m = (i+1)/8, (i+1)%8
+				b |= buf[d] & (1 << m) >> m << 1
+				d, m = (i+w+1)/8, (i+w+1)%8
+				b |= buf[d] & (1 << m) >> m << 3
+			}
 			if _, err = wr.Write(v[:utf8.EncodeRune(v, syms[b])]); err != nil {
 				return err
 			}
@@ -298,17 +302,26 @@ func enc2x2(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) (err err
 }
 
 // enc2x3 encodes 2x3 blocks to the writer.
-func enc2x3(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) (err error) {
-	if x := h % 3; x != 0 {
-		buf = append(buf, make([]byte, n*(3-x))...)
-	}
-	d, m, b, v := 0, 0, uint8(0), make([]byte, 4)
+func enc2x3(wr io.Writer, buf []byte, w, h int, syms map[uint8]rune) (err error) {
+	buf = append(buf, make([]byte, (w+7)/8*(h+5)/3)...)
+	i, d, m, b, v := 0, 0, 0, uint8(0), make([]byte, 4)
 	for y := 0; y < h; y += 3 {
 		for x := 0; x < w; x += 2 {
-			d, m = x/8, x%8
-			b = buf[y*n+d]&(0b11<<m)>>m |
-				buf[(y+1)*n+d]&(0b11<<m)>>m<<2 |
-				buf[(y+2)*n+d]&(0b11<<m)>>m<<4
+			i = y*w + x
+			d, m = i/8, i%8
+			b = buf[d] & (1 << m) >> m
+			d, m = (i+w)/8, (i+w)%8
+			b |= buf[d] & (1 << m) >> m << 2
+			d, m = (i+2*w)/8, (i+2*w)%8
+			b |= buf[d] & (1 << m) >> m << 4
+			if x+2 <= w {
+				d, m = (i+1)/8, (i+1)%8
+				b |= buf[d] & (1 << m) >> m << 1
+				d, m = (i+w+1)/8, (i+w+1)%8
+				b |= buf[d] & (1 << m) >> m << 3
+				d, m = (i+2*w+1)/8, (i+2*w+1)%8
+				b |= buf[d] & (1 << m) >> m << 5
+			}
 			if _, err = wr.Write(v[:utf8.EncodeRune(v, syms[b])]); err != nil {
 				return err
 			}
@@ -323,18 +336,30 @@ func enc2x3(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) (err err
 }
 
 // enc2x4 encodes 2x4 blocks to the writer.
-func enc2x4(wr io.Writer, buf []byte, w, h, n int, syms map[uint8]rune) (err error) {
-	if x := h % 4; x != 0 {
-		buf = append(buf, make([]byte, n*(4-x))...)
-	}
-	d, m, b, v := 0, 0, uint8(0), make([]byte, 4)
+func enc2x4(wr io.Writer, buf []byte, w, h int, syms map[uint8]rune) (err error) {
+	buf = append(buf, make([]byte, (w+7)/8*(h+11)/4)...)
+	i, d, m, b, v := 0, 0, 0, uint8(0), make([]byte, 4)
 	for y := 0; y < h; y += 4 {
 		for x := 0; x < w; x += 2 {
-			d, m = x/8, x%8
-			b = buf[y*n+d]&(0b11<<m)>>m |
-				buf[(y+1)*n+d]&(0b11<<m)>>m<<2 |
-				buf[(y+2)*n+d]&(0b11<<m)>>m<<4 |
-				buf[(y+3)*n+d]&(0b11<<m)>>m<<6
+			i = y*w + x
+			d, m = i/8, i%8
+			b = buf[d] & (1 << m) >> m
+			d, m = (i+w)/8, (i+w)%8
+			b |= buf[d] & (1 << m) >> m << 2
+			d, m = (i+2*w)/8, (i+2*w)%8
+			b |= buf[d] & (1 << m) >> m << 4
+			d, m = (i+3*w)/8, (i+3*w)%8
+			b |= buf[d] & (1 << m) >> m << 6
+			if x+2 <= w {
+				d, m = (i+1)/8, (i+1)%8
+				b |= buf[d] & (1 << m) >> m << 1
+				d, m = (i+w+1)/8, (i+w+1)%8
+				b |= buf[d] & (1 << m) >> m << 3
+				d, m = (i+2*w+1)/8, (i+2*w+1)%8
+				b |= buf[d] & (1 << m) >> m << 5
+				d, m = (i+3*w+1)/8, (i+3*w+1)%8
+				b |= buf[d] & (1 << m) >> m << 7
+			}
 			if _, err = wr.Write(v[:utf8.EncodeRune(v, syms[b])]); err != nil {
 				return err
 			}

@@ -23,9 +23,9 @@ const (
 	XXs Type = 'L'
 	// Doubles are single, 0.5x1 double wide blocks using [SolidsRunes].
 	Doubles Type = 'D'
-	// Halves are 1x2 double tall blocks using [HalvesRunes].
+	// Halves are 0.5x1 double wide blocks using [HalvesRunes].
 	Halves Type = 'e'
-	// Halves are 1x2 double tall blocks using ASCII-safe runes using
+	// Halves are 1x2 double height blocks using ASCII-safe runes using
 	// [ASCIIsRunes].
 	ASCIIs Type = 'E'
 	// Quads are 3x2 quarter blocks using [QuadsRunes].

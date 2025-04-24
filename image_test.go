@@ -16,26 +16,26 @@ import (
 )
 
 func TestNewImage(t *testing.T) {
+	t.Parallel()
 	const mask = 0b10101010
 	for _, h := range []int{2, 4, 6, 8, 10, 12, 16, 24, 28, 34, 56} {
 		for _, w := range []int{2, 4, 6, 8, 10, 12, 16, 24, 28, 34, 56} {
 			t.Run(fmt.Sprintf("%02d_%02d", w, h), func(t *testing.T) {
 				t.Parallel()
-				n := (w + 7) / 8
-				pix := make([]byte, n*h)
+				n := (w*h + 7) / 8
+				pix := make([]byte, n)
 				for i := range pix {
 					pix[i] = mask
 				}
-				// clear upper bits
-				if w%8 != 0 {
-					for i := n - 1; i < len(pix); i += n {
-						pix[i] &= 0xff >> (8 - (w % 8))
-					}
+				if m := w * h % 8; m != 0 {
+					pix[n-1] &= 0xff >> (8 - m)
 				}
 				img1 := Bitmap{
-					Pix:    pix,
-					Stride: n,
-					Rect:   image.Rect(0, 0, w, h),
+					Pix:         pix,
+					Stride:      w,
+					Rect:        image.Rect(0, 0, w, h),
+					Opaque:      DefaultOpaque,
+					Transparent: DefaultTransparent,
 				}
 				for y := range img1.Rect.Dy() {
 					for x := range img1.Rect.Dx() {
@@ -75,6 +75,7 @@ func TestNewImage(t *testing.T) {
 }
 
 func TestBitmap(t *testing.T) {
+	t.Parallel()
 	for seed := 1330; seed <= 1343; seed++ {
 		t.Run(strconv.Itoa(seed), func(t *testing.T) {
 			t.Parallel()
@@ -158,12 +159,15 @@ func TestBitmap(t *testing.T) {
 					}
 				})
 			}
-			t.Logf("Auto (%s):\n%v", Best(img.Rect.Dy()), img)
+			t.Run("Auto", func(t *testing.T) {
+				t.Logf("%s:\n%v", img.Best(), img)
+			})
 		})
 	}
 }
 
 func TestNewReader(t *testing.T) {
+	t.Parallel()
 	for y := 1; y < 135; y++ {
 		for x := 1; x < 135; x++ {
 			t.Run(fmt.Sprintf("%03d_%03d", x, y), func(t *testing.T) {
@@ -172,9 +176,7 @@ func TestNewReader(t *testing.T) {
 				if err != nil {
 					t.Fatalf("expected no error, got: %v", err)
 				}
-				for i := 0; i < len(img.Pix); i += img.Stride {
-					t.Logf("% 3d: %b", i/img.Stride+1, img.Pix[i:i+img.Stride])
-				}
+				t.Logf("\n%s", img)
 			})
 		}
 	}
