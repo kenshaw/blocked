@@ -162,6 +162,15 @@ func (img Bitmap) Format(f fmt.State, verb rune) {
 	}
 }
 
+// Bytes returns the bitmap encoded using the [Bitmap.Best] block type.
+func (img Bitmap) Bytes() []byte {
+	var buf bytes.Buffer
+	if err := img.Encode(&buf, img.Best()); err != nil {
+		panic(err)
+	}
+	return buf.Bytes()
+}
+
 // Encode encodes the bitmap to the writer using the block type.
 func (img Bitmap) Encode(w io.Writer, typ Type) error {
 	if typ == Auto {

@@ -160,7 +160,8 @@ func TestBitmap(t *testing.T) {
 				})
 			}
 			t.Run("Auto", func(t *testing.T) {
-				t.Logf("%s:\n%v", img.Best(), img)
+				t.Logf("%s:", img.Best())
+				testWrite(t, img.Bytes())
 			})
 		})
 	}
