@@ -1,12 +1,5 @@
 package blocked
 
-import (
-	"fmt"
-	"io"
-	"math/bits"
-	"strings"
-)
-
 // SolidsRunes returns the runes for single block resolution bitmaps.
 //
 // See: https://www.amp-what.com/unicode/search/full%20block
@@ -182,53 +175,3 @@ func BrailleRunes() []rune {
 		'⣴', '⣵', '⣼', '⣽', '⣶', '⣷', '⣾', '⣿',
 	}
 }
-
-// Dump dumps a ASCII drawing of the bitmask of the symbols to the writer.
-//
-// Used to verify the symbols for different [Type]'s.
-func Dump(w io.Writer, syms map[uint8]rune) {
-	n := len(syms)
-	for i := range n {
-		if i%8 == 0 {
-			fmt.Fprintf(w, "%*s|", 3, "")
-		}
-		fmt.Fprintf(w, "%c", syms[uint8(i)])
-		if i%8 == 7 || i == n-1 {
-			fmt.Fprintln(w, "|")
-		}
-	}
-	fmt.Fprintln(w)
-	width := 8 - bits.LeadingZeros8(uint8(len(syms)-1))
-	for i := range n {
-		if i != 0 {
-			fmt.Fprintln(w)
-		}
-		v := splitMask(uint8(i), width)
-		fmt.Fprintf(w, "%3d: |%s| │%c│\n", i, v[0], syms[uint8(i)])
-		for j := 1; j < len(v); j++ {
-			fmt.Fprintf(w, "%3s  |%s|\n", "", v[j])
-		}
-	}
-}
-
-// splitMask splits a mask into n lines of m runes per line, where n is the `8 - width`
-// significant bits of i. If width is less than or equal to 2, each line will
-// be 1 rune, otherwise each line will be 2 runes.
-func splitMask(i uint8, width int) []string {
-	s := maskRepl.Replace(fmt.Sprintf("%0*b", width, bits.Reverse8(i)>>(8-width)))
-	var v []string
-	n := 2
-	if width <= 2 {
-		n = 1
-	}
-	for i := 0; i < len(s); i += n {
-		v = append(v, s[i:min(i+n, len(s))])
-	}
-	return v
-}
-
-// maskRepl replaces '0', '1' with ' ', 'X'.
-var maskRepl = strings.NewReplacer(
-	"0", " ",
-	"1", "X",
-)
