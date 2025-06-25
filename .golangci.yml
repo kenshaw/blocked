@@ -2,24 +2,24 @@ version: "2"
 linters:
   default: all
   disable:
-    - wsl
-    - varnamelen
-    - wrapcheck
-    - errcheck
-    - testpackage
-    - paralleltest
-    - mnd
-    - godox
-    - gochecknoglobals
-    - exhaustruct
-    - exhaustive
-    - depguard
-    - revive
-    - nonamedreturns
-    - nlreturn
-    - gosec
-    - gocognit
-    - dupl
     - cyclop
+    - depguard
+    - dupl
+    - errcheck
+    - exhaustive
+    - exhaustruct
     - funlen
+    - gochecknoglobals
+    - gocognit
+    - godox
+    - gosec
+    - mnd
+    - nlreturn
+    - nonamedreturns
+    - paralleltest
+    - revive
+    - testpackage
+    - varnamelen
     - wastedassign
+    - wrapcheck
+    - wsl
